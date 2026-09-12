@@ -67,16 +67,23 @@
   --font-body-family: "IBM Plex Sans", sans-serif;
   --font-mono-family: "IBM Plex Mono", monospace;
 
-  --ink: oklch(0.19 0.038 264);
-  --ink2: oklch(0.235 0.042 264);
-  --ink3: oklch(0.28 0.046 263);
-  --line: oklch(0.37 0.045 263);
-  --signal: oklch(0.812 0.153 79.5);
-  --signalsoft: oklch(0.872 0.107 82.5);
-  --clear: oklch(0.79 0.148 162.5);
-  --danger: oklch(0.68 0.204 27);
-  --steel: oklch(0.71 0.037 259);
-  --cream: oklch(0.958 0.008 260);
+  /*
+   * Light theme. The token names are kept from the original dark palette so no
+   * component markup has to change: --ink is the page ground (now white),
+   * --cream is the primary text (now near-black), --steel stays the muted text.
+   * Accent hues are darkened from their dark-theme values so they still clear
+   * contrast requirements against a white ground.
+   */
+  --ink: #ffffff;
+  --ink2: #f7f8fb;
+  --ink3: #eef1f6;
+  --line: #d6dce7;
+  --signal: #a76a00;
+  --signalsoft: #8a5a00;
+  --clear: #0b7a57;
+  --danger: #c0341f;
+  --steel: #5a6478;
+  --cream: #0f1521;
 
   --background: var(--ink);
   --foreground: var(--cream);
@@ -93,29 +100,29 @@
   --accent: var(--ink3);
   --accent-foreground: var(--cream);
   --destructive: var(--danger);
-  --destructive-foreground: var(--cream);
+  --destructive-foreground: var(--ink);
   --border: var(--line);
   --input: var(--line);
   --ring: var(--signal);
 
   --gradient-dusk: radial-gradient(
     120% 90% at 78% 0%,
-    #ff8a3a 0%,
-    #d6552f 18%,
-    #7a2f38 42%,
-    #241830 72%,
-    #0b1220 100%
+    #ffdcb4 0%,
+    #ffe9d6 20%,
+    #f6ecf0 45%,
+    #f2f5fb 72%,
+    #ffffff 100%
   );
   --gradient-chrome: linear-gradient(
     180deg,
-    #f4f7ff 0%,
-    #c8d3e6 30%,
-    #8391ad 52%,
-    #d6deec 60%,
-    #8391ad 80%,
-    #c8d3e6 100%
+    #ffffff 0%,
+    #dfe6f2 30%,
+    #b3bfd4 52%,
+    #eef2f9 60%,
+    #b3bfd4 80%,
+    #dfe6f2 100%
   );
-  --gradient-vignette: radial-gradient(60% 100% at 50% 0%, transparent 55%, oklch(0.19 0.038 264 / 0.9) 100%);
+  --gradient-vignette: radial-gradient(60% 100% at 50% 0%, transparent 55%, #ffffff 100%);
 }
 
 @layer base {
@@ -164,7 +171,8 @@
 
 @utility chrome {
   background: var(--gradient-chrome);
-  color: var(--ink);
+  /* Dark text: the gradient is light metal, and --ink is now the white ground. */
+  color: var(--cream);
 }
 
 @utility hairline {
