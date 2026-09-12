@@ -1,16 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { toast } from "sonner";
 import { apiPatch } from "@/lib/api";
 import { blockRequestQuery } from "@/lib/queries";
 import type { BlockRequest, Window } from "@/lib/types";
 import {
   AsyncBlock,
-  ChromeButton,
   DataTable,
   ErrorNote,
-  Field,
   GhostButton,
   KeyValueGrid,
   Meta,
@@ -19,8 +16,6 @@ import {
   RiskTag,
   StatusTag,
   Tag,
-  TextArea,
-  TextInput,
 } from "@/components/control";
 import { cn } from "@/lib/utils";
 import { display, fmtDateTime, fmtNum, fmtProb } from "@/lib/format";
@@ -52,36 +47,17 @@ function RequestDetail() {
 
 function RequestView({ request: r }: { request: BlockRequest }) {
   const qc = useQueryClient();
-  const [officer, setOfficer] = useState("");
-  const [note, setNote] = useState("");
+  const navigate = useNavigate();
   const path = `/ai/block-requests/${encodeURIComponent(r.requestId)}`;
   const d = r.decision;
 
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ["block-request", r.requestId] });
-    void qc.invalidateQueries({ queryKey: ["block-requests"] });
-  };
-  const by = officer.trim() ? { by: officer.trim() } : {};
-
   const selectWindow = useMutation({
-    mutationFn: (optionId: string) => apiPatch<BlockRequest>(`${path}/window`, { optionId, ...by }),
+    mutationFn: (optionId: string) => apiPatch<BlockRequest>(`${path}/window`, { optionId }),
     onSuccess: (_res, optionId) => {
-      toast.success(`Window switched to ${optionId.replace(/_/g, " ").toLowerCase()}`);
-      refresh();
-    },
-  });
-
-  const decide = useMutation({
-    mutationFn: (decision: "accepted" | "rejected") =>
-      apiPatch<BlockRequest>(`${path}/decision`, {
-        decision,
-        ...by,
-        ...(note.trim() ? { note: note.trim() } : {}),
-      }),
-    onSuccess: (_res, decision) => {
-      toast.success(`Request ${decision}`);
-      setNote("");
-      refresh();
+      toast.success(`Block confirmed for ${optionId.replace(/_/g, " ").toLowerCase()}`);
+      void qc.invalidateQueries({ queryKey: ["block-request", r.requestId] });
+      void qc.invalidateQueries({ queryKey: ["block-requests"] });
+      void navigate({ to: "/" });
     },
   });
 
@@ -96,7 +72,6 @@ function RequestView({ request: r }: { request: BlockRequest }) {
     : safety?.safetyPrecautions
       ? [safety.safetyPrecautions]
       : [];
-  const decided = r.status === "accepted" || r.status === "rejected";
 
   return (
     <div className="space-y-6">
@@ -162,7 +137,7 @@ function RequestView({ request: r }: { request: BlockRequest }) {
                         disabled={selected || selectWindow.isPending}
                         onClick={() => selectWindow.mutate(id)}
                       >
-                        {selected ? "In use" : "Use this window"}
+                        {selected ? "In use" : "Confirm this block"}
                       </GhostButton>
                     </div>
                   );
@@ -173,7 +148,7 @@ function RequestView({ request: r }: { request: BlockRequest }) {
             )}
             {selectWindow.error ? (
               <div className="mt-3">
-                <ErrorNote error={selectWindow.error} title="Could not switch window" />
+                <ErrorNote error={selectWindow.error} title="Could not confirm this window" />
               </div>
             ) : null}
           </Panel>
@@ -271,43 +246,6 @@ function RequestView({ request: r }: { request: BlockRequest }) {
         </div>
 
         <div className="space-y-6 xl:col-span-4">
-          <Panel title="Officer decision" right={decided ? r.status?.toUpperCase() : "PENDING"}>
-            <div className="space-y-4">
-              <Field label="Officer">
-                <TextInput
-                  value={officer}
-                  onChange={(e) => setOfficer(e.target.value)}
-                  placeholder="DRM / Sr DEN"
-                />
-              </Field>
-              <Field label="Note">
-                <TextArea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Approved for night block"
-                />
-              </Field>
-              {decide.error ? <ErrorNote error={decide.error} title="Decision failed" /> : null}
-              <div className="flex flex-wrap gap-3">
-                <ChromeButton disabled={decide.isPending} onClick={() => decide.mutate("accepted")}>
-                  Accept
-                </ChromeButton>
-                <GhostButton
-                  tone="danger"
-                  disabled={decide.isPending}
-                  onClick={() => decide.mutate("rejected")}
-                >
-                  Reject
-                </GhostButton>
-              </div>
-              {decided ? (
-                <p className="font-mono text-[10px] text-steel">
-                  A decision is on record; deciding again adds to the audit trail.
-                </p>
-              ) : null}
-            </div>
-          </Panel>
-
           {safety ? (
             <Panel title="Safety protocols">
               <div className="grid grid-cols-2 gap-3">
